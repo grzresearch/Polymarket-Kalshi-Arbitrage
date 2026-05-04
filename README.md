@@ -7,8 +7,32 @@ A sophisticated arbitrage trading bot that identifies and exploits price discrep
 ![Web3](https://img.shields.io/badge/Web3-Enabled-purple?style=for-the-badge&logo=ethereum)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
+## 3D Arbitrage Surface
+
+Two live YES‑price surfaces in the same 3D plot — **cyan = Kalshi**, **amber = Polymarket** — plotted across matched markets (X) and a sliding time window (Y → now). The vertical gap between the two ribbons at any (market, time) is the cross‑platform arbitrage edge.
+
+Every actionable arbitrage on the "now" edge is marked with:
+
+- a **colour‑coded glowing bar** between the two prices (🟢 green ≥ 5 ¢ net after fees, 🟡 amber 1–5 ¢, 🔴 red < 1 ¢),
+- **star markers** in venue colour at the exact Kalshi and Polymarket prices,
+- a **floor spotlight diamond** directly under the column to anchor it on the (market, time) plane,
+- a **cent label** showing the live spread (e.g. `+12.9¢`).
+
+The camera is fixed; the surfaces themselves scroll forward in time so each frame represents the latest tape from both venues. Where the ribbons hug each other there is no arbitrage; where they pull apart, the markers light up.
+
+<p align="center">
+  <img src="frontend/assets/arbitrage_surface.gif" alt="Live Kalshi vs Polymarket YES price surfaces" width="640">
+</p>
+
+The animation is regenerated automatically after every market scan and served from `/assets/arbitrage_surface.gif`. To re-render manually:
+
+```bash
+python -m src.viz.arbitrage_surface
+```
+
 ## Table of Contents
 
+- [3D Arbitrage Surface](#3d-arbitrage-surface)
 - [Features](#features)
 - [How It Works](#how-it-works)
 - [Architecture](#architecture)
@@ -40,6 +64,7 @@ A sophisticated arbitrage trading bot that identifies and exploits price discrep
 - **Live Market Data**: WebSocket-powered streaming of market prices and opportunities
 - **Trade History**: Complete log of executed trades with P&L tracking
 - **Interactive Filters**: Filter opportunities by minimum profit and maximum risk
+- **3D Arbitrage Surface**: Animated GIF visualisation of the cross-platform edge landscape with live opportunities projected onto it (`/assets/arbitrage_surface.gif`)
 - **Keyboard Shortcuts**: `Ctrl+S` to scan, `Esc` to close modals
 
 ### Technical Features
