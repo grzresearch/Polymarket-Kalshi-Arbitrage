@@ -1,11 +1,28 @@
 # Polymarket-Kalshi Arbitrage Bot
 
-A sophisticated arbitrage trading bot that identifies and exploits price discrepancies between **Kalshi** and **Polymarket** prediction markets. Features a beautiful terminal-style web interface with real-time updates and Web3 wallet integration.
+An arbitrage trading bot that identifies and exploits price discrepancies between **Kalshi** and **Polymarket** prediction markets. It matches equivalent markets across both venues, detects and risk-scores cross-platform opportunities, and executes both legs through the official APIs. A terminal-style web interface provides real-time updates over WebSocket and Web3 wallet integration; dry-run mode is enabled by default.
 
-![Terminal Interface](https://img.shields.io/badge/Interface-Terminal%20Style-00ff00?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=python)
-![Web3](https://img.shields.io/badge/Web3-Enabled-purple?style=for-the-badge&logo=ethereum)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+
+## Contents
+
+- [3D Arbitrage Surface](#3d-arbitrage-surface)
+- [Features](#features)
+- [How It Works](#how-it-works)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
+- [Web Interface](#web-interface)
+- [API Reference](#api-reference)
+- [Trading Strategies](#trading-strategies)
+- [Risk Management](#risk-management)
+- [Production Readiness](#production-readiness)
+- [Development](#development)
+- [Project Structure](#project-structure)
+- [Troubleshooting](#troubleshooting)
+- [Disclaimer](#disclaimer)
+- [License](#license)
 
 ## 3D Arbitrage Surface
 
@@ -33,24 +50,6 @@ The animation is regenerated automatically after every market scan and served fr
 ```bash
 python -m src.viz.arbitrage_surface
 ```
-
-## Table of Contents
-
-- [3D Arbitrage Surface](#3d-arbitrage-surface)
-- [Features](#features)
-- [How It Works](#how-it-works)
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Web Interface](#web-interface)
-- [API Reference](#api-reference)
-- [Trading Strategies](#trading-strategies)
-- [Risk Management](#risk-management)
-- [Development](#development)
-- [Troubleshooting](#troubleshooting)
-- [Disclaimer](#disclaimer)
-- [License](#license)
 
 ## Features
 
@@ -128,47 +127,6 @@ Example:
                                         └──────────────┘
 ```
 
-## Architecture
-
-```
-polymarket-kalshi-arbitrage/
-├── main.py                 # CLI entry point
-├── requirements.txt        # Python dependencies
-├── .env.example           # Environment template
-├── .gitignore
-│
-├── src/
-│   ├── __init__.py
-│   │
-│   ├── api/               # API Clients
-│   │   ├── __init__.py
-│   │   ├── kalshi_client.py      # Kalshi Trading API v2
-│   │   └── polymarket_client.py  # Polymarket CLOB + Gamma API
-│   │
-│   ├── core/              # Business Logic
-│   │   ├── __init__.py
-│   │   ├── market_matcher.py     # Fuzzy market matching
-│   │   ├── arbitrage_detector.py # Opportunity detection
-│   │   └── trade_executor.py     # Trade execution
-│   │
-│   ├── utils/             # Utilities
-│   │   ├── __init__.py
-│   │   ├── config.py      # Configuration management
-│   │   └── logger.py      # Logging setup
-│   │
-│   └── server.py          # Flask + SocketIO server
-│
-├── frontend/              # Web Interface
-│   ├── index.html         # Main terminal UI
-│   ├── css/
-│   │   └── terminal.css   # Cyberpunk styling
-│   └── js/
-│       └── app.js         # Frontend application
-│
-└── tests/                 # Test suite
-    └── ...
-```
-
 ## Installation
 
 ### Prerequisites
@@ -183,21 +141,18 @@ polymarket-kalshi-arbitrage/
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/polymarket-kalshi-arbitrage.git
-cd polymarket-kalshi-arbitrage
+git clone https://github.com/grzresearch/Polymarket-Kalshi-Arbitrage.git
+cd Polymarket-Kalshi-Arbitrage
 
-# Create virtual environment
+# Create a virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Copy environment template
+# Copy the environment template and edit it
 cp .env.example .env
-
-# Edit configuration
-nano .env  # or use your preferred editor
 
 # (Optional) run the test suite to confirm the install
 pytest
@@ -206,20 +161,11 @@ pytest
 python main.py server
 ```
 
-### Producing the credentials
+### Docker (Optional)
 
-| Field | Where to get it |
-|---|---|
-| `KALSHI_API_KEY` + `KALSHI_PRIVATE_KEY_PATH` | Sign in at https://kalshi.com → Profile → Account → API Keys → "Create API key". Save the displayed key id (`KALSHI_API_KEY`) and download the RSA private key (.pem) Kalshi gives you once — point `KALSHI_PRIVATE_KEY_PATH` at it. Kalshi signs every request with RSA-PSS-SHA256, so the .pem is mandatory. |
-| `POLYMARKET_PRIVATE_KEY` | The private key of a Polygon wallet that holds USDC (the "funder" wallet). The first time the bot trades it derives L2 API credentials from this wallet automatically. |
-| `WEB3_PROVIDER_URL` | An Alchemy / Infura / QuickNode Polygon mainnet RPC URL. The free tiers are enough for the read traffic this bot generates. |
-
-Leave `DRY_RUN=true` while you verify that scans return the markets you expect — orders will be logged but not sent. Flip to `false` only after you've watched a full scan/match/detect cycle and confirmed the opportunities make sense.
-
-### Docker Installation (Optional)
+The repository does not ship a Dockerfile. A minimal one looks like this:
 
 ```dockerfile
-# Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -242,63 +188,44 @@ docker run -p 8080:8080 --env-file .env arbitrage-bot
 
 ### Environment Variables
 
-Create a `.env` file based on `.env.example`:
+All settings are read from a `.env` file; `.env.example` documents every variable. The main groups are:
+
+| Group | Variables |
+|---|---|
+| Kalshi | `KALSHI_API_KEY`, `KALSHI_PRIVATE_KEY_PATH` (or `KALSHI_PRIVATE_KEY_PEM`), `KALSHI_PRIVATE_KEY_PASSWORD`, `KALSHI_API_URL`, `KALSHI_DEMO_MODE` |
+| Polymarket | `POLYMARKET_PRIVATE_KEY`, optional `POLYMARKET_API_KEY` / `POLYMARKET_API_SECRET` / `POLYMARKET_API_PASSPHRASE`, `POLYMARKET_API_URL`, `POLYMARKET_GAMMA_API_URL` |
+| Web3 (Polygon) | `WEB3_PROVIDER_URL`, `POLYGON_CHAIN_ID` |
+| Application | `HOST`, `PORT`, `DEBUG` |
+| Trading guardrails | `DRY_RUN`, `MIN_ARBITRAGE_PROFIT_PCT`, `MAX_TRADE_SIZE_USD`, `MAX_POSITION_USD`, `AUTO_TRADE_ENABLED` |
+| Logging | `LOG_LEVEL`, `LOG_FILE` |
+
+Trading guardrails as shipped in `.env.example`:
 
 ```bash
-# ===========================================
-# Kalshi Configuration
-# ===========================================
-# Get your API key from: https://kalshi.com/settings/api
-KALSHI_API_KEY=your_kalshi_api_key
-KALSHI_API_SECRET=your_kalshi_api_secret
-KALSHI_DEMO_MODE=false
-
-# ===========================================
-# Polymarket Configuration
-# ===========================================
-# Polymarket uses wallet-based authentication
-# Private key is optional - you can use MetaMask in the UI
-POLYMARKET_PRIVATE_KEY=your_wallet_private_key
-
-# ===========================================
-# Web3 Configuration
-# ===========================================
-# Polygon RPC URL (get from Alchemy, Infura, or use public)
-WEB3_PROVIDER_URL=https://polygon-rpc.com
-POLYGON_CHAIN_ID=137
-
-# ===========================================
-# Trading Configuration
-# ===========================================
+DRY_RUN=true                    # Simulate trades without execution
 MIN_ARBITRAGE_PROFIT_PCT=1.0    # Minimum profit % to report
 MAX_TRADE_SIZE_USD=100          # Maximum single trade size
 MAX_POSITION_USD=1000           # Maximum total position
 AUTO_TRADE_ENABLED=false        # Enable automatic trading
-DRY_RUN=true                    # Simulate trades without execution
-
-# ===========================================
-# Server Configuration
-# ===========================================
-HOST=0.0.0.0
-PORT=8080
-DEBUG=false
-
-# ===========================================
-# Logging
-# ===========================================
-LOG_LEVEL=INFO
-LOG_FILE=logs/arbitrage.log
 ```
+
+### Producing the credentials
+
+| Field | Where to get it |
+|---|---|
+| `KALSHI_API_KEY` + `KALSHI_PRIVATE_KEY_PATH` | Sign in at https://kalshi.com → Profile → Account → API Keys → "Create API key". Save the displayed key id (`KALSHI_API_KEY`) and download the RSA private key (.pem) Kalshi gives you once — point `KALSHI_PRIVATE_KEY_PATH` at it. Kalshi signs every request with RSA-PSS-SHA256, so the .pem is mandatory. |
+| `POLYMARKET_PRIVATE_KEY` | The private key of a Polygon wallet that holds USDC (the "funder" wallet). The first time the bot trades it derives L2 API credentials from this wallet automatically. |
+| `WEB3_PROVIDER_URL` | An Alchemy / Infura / QuickNode Polygon mainnet RPC URL. The free tiers are enough for the read traffic this bot generates. |
+
+Leave `DRY_RUN=true` while you verify that scans return the markets you expect — orders will be logged but not sent. Flip to `false` only after you've watched a full scan/match/detect cycle and confirmed the opportunities make sense.
 
 ### Getting API Keys
 
 #### Kalshi
 
-1. Create account at [kalshi.com](https://kalshi.com)
-2. Complete identity verification
-3. Go to Settings > API
-4. Generate new API key pair
-5. Store securely - the secret is only shown once!
+1. Create an account at [kalshi.com](https://kalshi.com) and complete identity verification.
+2. Go to Profile → Account → API Keys and create an API key.
+3. Save the key id and the RSA private key (.pem); the private key is only shown once.
 
 #### Polymarket
 
@@ -318,7 +245,7 @@ Polymarket uses Web3 wallet authentication:
 # Start the web server (default)
 python main.py server
 
-# Start on custom port
+# Start on a custom port
 python main.py server --port 3000
 
 # Enable live trading (disable dry run)
@@ -337,7 +264,7 @@ python main.py scan --output json
 python main.py --help
 ```
 
-### Web Interface
+### Using the Web Interface
 
 1. Open browser to `http://localhost:8080`
 2. Connect your wallets:
@@ -403,6 +330,8 @@ python main.py --help
 | `/api/trades` | GET | Get trade history |
 | `/api/execute` | POST | Execute a trade |
 | `/api/scan` | POST | Trigger market scan |
+| `/api/visualizations/arbitrage_surface.gif` | GET | Current 3D arbitrage surface GIF |
+| `/api/visualizations/arbitrage_surface/regenerate` | POST | Force a re-render of the surface GIF |
 
 ### WebSocket Events
 
@@ -494,50 +423,7 @@ MAX_TRADE_SIZE_USD=50          # Start small
 DRY_RUN=true                   # Always test first!
 ```
 
-## Development
-
-### Setting Up Development Environment
-
-```bash
-# Clone and setup
-git clone https://github.com/yourusername/polymarket-kalshi-arbitrage.git
-cd polymarket-kalshi-arbitrage
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate
-
-# Install dev dependencies
-pip install -r requirements.txt
-pip install pytest pytest-asyncio black flake8
-
-# Run tests
-pytest tests/
-
-# Format code
-black src/
-
-# Lint
-flake8 src/
-```
-
-### Project Structure
-
-```
-src/
-├── api/           # External API integrations
-├── core/          # Business logic
-├── utils/         # Shared utilities
-└── server.py      # Web server
-```
-
-### Adding New Features
-
-1. **New API Client**: Add to `src/api/`
-2. **New Detection Strategy**: Extend `ArbitrageDetector`
-3. **New UI Component**: Update `frontend/`
-
-## Production readiness
+## Production Readiness
 
 What works out of the box after `pip install -r requirements.txt`:
 
@@ -555,6 +441,60 @@ What still requires operator attention:
 - ⚠️ **Polymarket wallet setup**: the funder wallet has to hold USDC on Polygon and have approved the Polymarket exchange contracts. The `py-clob-client` README walks through this once.
 - ⚠️ **Live trading**: `DRY_RUN=false` is opt-in. Always run a few scans in dry mode first and verify the matched markets and profit numbers look right before flipping the switch.
 - ⚠️ **Monitoring**: there is no Prometheus / Grafana wiring; logs go to stdout and `LOG_FILE` only.
+
+## Development
+
+```bash
+# Install dependencies (pytest, pytest-asyncio and black are included)
+pip install -r requirements.txt
+pip install flake8
+
+# Run tests
+pytest
+
+# Format code
+black src/
+
+# Lint
+flake8 src/
+```
+
+### Adding New Features
+
+1. **New API Client**: Add to `src/api/`
+2. **New Detection Strategy**: Extend `ArbitrageDetector`
+3. **New UI Component**: Update `frontend/`
+
+## Project Structure
+
+```
+Polymarket-Kalshi-Arbitrage/
+├── main.py                       # CLI entry point (server, scan, trade)
+├── requirements.txt              # Python dependencies
+├── pytest.ini                    # Test configuration
+├── .env.example                  # Environment template
+├── src/
+│   ├── server.py                 # Flask + SocketIO server
+│   ├── api/                      # API clients
+│   │   ├── kalshi_client.py      # Kalshi Trading API v2
+│   │   └── polymarket_client.py  # Polymarket CLOB + Gamma API
+│   ├── core/                     # Business logic
+│   │   ├── market_matcher.py     # Fuzzy market matching
+│   │   ├── arbitrage_detector.py # Opportunity detection
+│   │   ├── price_tape.py         # Rolling YES-price tape
+│   │   └── trade_executor.py     # Trade execution
+│   ├── viz/
+│   │   └── arbitrage_surface.py  # 3D arbitrage surface renderer
+│   └── utils/
+│       ├── config.py             # Configuration management
+│       └── logger.py             # Logging setup
+├── frontend/                     # Web interface
+│   ├── index.html                # Terminal UI
+│   ├── css/terminal.css          # Styling
+│   ├── js/app.js                 # Frontend application
+│   └── assets/arbitrage_surface.gif
+└── tests/                        # Unit tests (pytest)
+```
 
 ## Troubleshooting
 
@@ -611,12 +551,14 @@ python main.py server --debug
 
 ### Getting Help
 
-1. Check the [Issues](https://github.com/yourusername/polymarket-kalshi-arbitrage/issues)
+1. Check the [Issues](https://github.com/grzresearch/Polymarket-Kalshi-Arbitrage/issues)
 2. Review logs for error messages
 3. Open a new issue with:
    - Error message
    - Steps to reproduce
    - Environment details
+
+Questions, issues and pull requests are welcome.
 
 ## Disclaimer
 
@@ -658,9 +600,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-**Built with care by developers who love prediction markets**
-
-Questions? Issues? PRs welcome!
